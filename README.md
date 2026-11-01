@@ -1,5 +1,7 @@
 # Clinic Inventory
 
+**Live website:** [Open Clinic Inventory](https://clinic-inventory-lemon.vercel.app) · Approved staff sign-in required.
+
 A small staff website for tracking clinic supplies, estimating daily use, highlighting low stock, and reopening saved supplier links. The online version uses Vercel and Supabase. The original local version is also available.
 
 ## Online staff access
