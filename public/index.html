@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Clinic supply tracking, daily usage, and saved restocking links.">
+  <title>Supply room | Florida Maxillofacial and Reconstructive Surgery</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to supplies</a>
+  <header class="app-header"><div class="shell header-inner">
+    <div class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m3 7 9-4 9 4v10l-9 4-9-4V7Z"/><path d="m3 7 9 4 9-4M12 11v10M7.5 5l9 4"/></svg></span><div><p class="brand-name">Supply room</p><p class="practice">Florida Maxillofacial and Reconstructive Surgery</p></div></div>
+    <div class="header-meta"><span class="workspace-chip" id="workspace-label">Your inventory</span><time id="today-label"></time></div>
+  </div></header>
+  <div class="demo-banner" id="demo-banner" hidden><div class="shell"><span><strong>Sample inventory.</strong> Counts and suppliers below are examples.</span><a href="/">Go to your inventory <span aria-hidden="true">↗</span></a></div></div>
+  <main class="shell" id="main-content" tabindex="-1">
+    <p class="error" id="page-error" role="alert" hidden></p>
+    <div class="page-heading"><div><p class="eyebrow">Keep the clinic stocked.</p><h1 id="inventory-heading" tabindex="-1">Your supplies, at a glance.</h1><p class="secondary" id="inventory-summary">Loading your supplies…</p></div><button class="primary-button" type="button" data-action="add-item"><span aria-hidden="true">＋</span> Add supply</button></div>
+    <section class="daily-strip" aria-labelledby="daily-strip-heading">
+      <div class="daily-intro"><span class="daily-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 3v4m8-4v4M4 10h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Z"/><path d="m9 15 2 2 4-4"/></svg></span><div><h2 id="daily-strip-heading">Today’s usage</h2><p id="daily-summary">A patient total updates your estimated stock.</p></div></div>
+      <div class="daily-controls"><form id="quick-day-form"><label for="quick-patients">Patients today</label><div class="quick-input"><input id="quick-patients" name="patients" type="number" min="0" max="10000" step="1" placeholder="0" required><button class="primary-button" type="submit">Save total</button></div><p class="form-error" role="alert" hidden></p></form><button class="text-button" type="button" data-action="daily">Log item usage <span aria-hidden="true">↗</span></button></div>
+    </section>
+    <section aria-labelledby="supplies-heading">
+      <div class="inventory-tools"><div class="supply-heading"><h2 id="supplies-heading">Supplies</h2><span class="count-chip" id="supply-count">0</span></div><div class="filters"><label class="search-field"><span class="visually-hidden">Search supplies</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="search" type="search" placeholder="Search supplies…" autocomplete="off"></label><label><span class="visually-hidden">Show supplies</span><select id="stock-filter"><option value="active">All supplies</option><option value="attention">Low or out of stock</option><option value="archived">Archived supplies</option></select></label></div></div>
+      <div id="inventory-content"></div>
+      <p class="inventory-note">Stock uses saved counts, deliveries, and daily usage. Patient-based quantities are estimates.</p>
+    </section>
+    <details class="recent-activity"><summary>Recent changes</summary><div id="activity-content"></div></details>
+  </main>
+  <footer class="shell app-footer"><p><span class="local-dot" aria-hidden="true"></span> Saved on this computer</p><div class="footer-actions"><a id="sample-link" href="/?demo=1">Try sample inventory</a><button class="text-button" type="button" data-action="refresh">Refresh</button><button class="text-button" type="button" data-action="export">Export CSV</button></div></footer>
+  <p class="notice" id="notice" role="status" aria-live="polite"></p>
+  <dialog id="item-dialog" aria-labelledby="item-dialog-title"></dialog>
+  <dialog id="detail-dialog" aria-labelledby="detail-dialog-title"></dialog>
+  <dialog id="stock-dialog" aria-labelledby="stock-dialog-title"></dialog>
+  <dialog id="daily-dialog" aria-labelledby="daily-dialog-title"><div class="dialog-heading"><div><p class="eyebrow">Daily usage</p><h2 id="daily-dialog-title">Log usage</h2></div><button class="close-button" type="button" data-close="daily-dialog" aria-label="Close usage form">×</button></div><div id="daily-content"></div></dialog>
+</body>
+</html>
