@@ -12,6 +12,7 @@ let state, selectedItem, editingItem, dayData, noticeTimer, dayRequest = 0, quic
 
 function apiPath(path) { return `${path}${path.includes('?')?'&':'?'}workspace=${demo?'demo':'clinic'}`; }
 async function request(path, body) {
+  if (globalThis.ClinicCloud) return globalThis.ClinicCloud.request(apiPath(path),body);
   const response = await fetch(apiPath(path), body === undefined ? {cache:'no-store'} : {
     method:'POST',headers:{'Content-Type':'application/json','X-Clinic-Request':'1'},body:JSON.stringify(body)
   });
@@ -191,6 +192,7 @@ function exportInventory() {
 
 document.addEventListener('click', async event => {
   const button = event.target.closest('button');if (!button) return;
+  if (button.closest('[data-cloud-ui]')) return;
   clearError();
   try {
     if (button.dataset.close) $(`#${button.dataset.close}`).close();
@@ -281,4 +283,14 @@ document.addEventListener('change', async event => {
     try { await loadDay(event.target.value);$('#usage-date').focus(); } catch (error) { showError(error); }
   }
 });
-refresh().catch(showError);
+if (globalThis.ClinicCloud) {
+  globalThis.ClinicCloud.start(() => refresh(), () => {
+    state = null;
+    document.querySelectorAll('dialog[open]').forEach(dialog => dialog.close());
+    for (const id of ['inventory-content','activity-content','daily-content']) $(`#${id}`).replaceChildren();
+    for (const dialog of [itemDialog,detailDialog,stockDialog]) dialog.replaceChildren();
+    $('#quick-patients').value = '';
+    $('#inventory-summary').textContent = '';
+    $('#notice').textContent = '';
+  }).catch(showError);
+} else refresh().catch(showError);

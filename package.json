@@ -7,7 +7,16 @@
     "dev": "node server.mjs",
     "start": "node server.mjs",
     "test": "node --test",
-    "security:check": "node scripts/check-http-security.mjs"
+    "security:check": "node scripts/check-http-security.mjs",
+    "build": "node scripts/build-cloud.mjs"
   },
-  "engines": { "node": ">=22.13" }
+  "engines": {
+    "node": "24.x"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.118.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
 }

@@ -125,6 +125,28 @@ export function createStore(filename = ':memory:', clock = () => new Date()) {
   const store = {
     today,
     close: () => db.close(),
+    exportSnapshot() {
+      const tables = {};
+      for (const table of ['items','patients','usage','estimates','deliveries','suppliers','activity']) {
+        tables[table] = db.prepare(`SELECT * FROM ${table}`).all().map(row => ({...row}));
+      }
+      return {format:1,tables};
+    },
+    restoreSnapshot(snapshot) {
+      if (filename !== ':memory:') throw new InputError('Shared snapshots can only be loaded into a temporary store.');
+      const tables = ['items','patients','usage','estimates','deliveries','suppliers','activity'];
+      if (snapshot?.format !== 1 || !snapshot.tables || tables.some(table => !Array.isArray(snapshot.tables[table]))) {
+        throw new InputError('The shared inventory format could not be read.');
+      }
+      transaction(() => {
+        for (const table of [...tables].reverse()) db.exec(`DELETE FROM ${table}`);
+        for (const table of tables) {
+          const columns = db.prepare(`PRAGMA table_info(${table})`).all().map(column => column.name);
+          const insert = db.prepare(`INSERT INTO ${table}(${columns.join(',')}) VALUES(${columns.map(() => '?').join(',')})`);
+          for (const row of snapshot.tables[table]) insert.run(...columns.map(column => row[column]));
+        }
+      });
+    },
     createItem(input) {
       const values = itemFields(input);
       const baseline = quantity(input.quantity, 'Starting quantity');

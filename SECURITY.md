@@ -1,44 +1,36 @@
-# Security review and staff access plan
+# Security and verification
 
-Reviewed October 30, 2026. This review covers the local inventory prototype. Remote staff sign-in and a hosted deployment have not been implemented or tested.
+## Online access
 
-## Verified current access
+Supabase manages individual staff sessions and passwords. Each inventory request verifies the session and checks the current approved email list. Approval is based on the authenticated provider account, not an email supplied in an inventory request. Removing approval blocks existing sessions on their next data request. The database also verifies that the provider session still exists.
 
-- The running server listens on `127.0.0.1:3001`, not a public or clinic-network interface.
-- Requests with unexpected hostnames are refused. Browser cross-site API reads and writes are refused, and writes require the app's custom request header.
-- The local API does not authenticate people. Anyone able to use this computer's account, or run a local program under it, can access the inventory. A custom header is not a password or staff identity check.
-- The data directory is now owner-only (`0700`) and both existing SQLite files are owner-readable/writable (`0600`). New database files and journals inherit restrictive permissions. Contents were not reset or migrated.
+The database tables live in an unexposed private schema. Direct client table grants are revoked and row-level security defaults to deny. Narrow RPC functions require both approved staff identity and a separate server-only secret. A staff browser cannot submit arbitrary inventory snapshots directly. Administrator functions check the administrator role and protect the last active administrator.
 
-## Changes made
+The account-setup Edge Function uses its provider-managed service credential only on the server. It requires the server secret and an active approved address before creating a one-time setup/reset link. The website's setup endpoint additionally requires an authenticated administrator. Setup links are credentials: share them privately, never commit them, and generate a replacement if one expires or is exposed. Tokens are passed in URL fragments and removed from browser history when opened.
 
-- Tightened existing local data-file permissions and made that protection part of server startup.
-- Applied cross-site request checks to API reads as well as writes.
-- Added a no-referrer policy, same-origin resource policy, frame protection, and disabled unused camera, microphone, and location permissions.
-- Strengthened the existing content security policy to disallow embedded objects and frames.
-- Validated that submitted JSON is an object, bounded request bodies to 64 KiB of received bytes, and preserved Unicode characters split across network chunks.
-- Return a controlled client error for malformed encoded paths.
-- Excluded environment files and common private-key files from source control.
+The browser stores the normal Supabase session on the device. Use trusted devices, sign out of shared computers, and keep administrator accounts limited. Initial account provisioning is performed by an administrator rather than relying on outgoing email. There is no self-service email reset flow.
 
-The source review also confirmed parameterized SQL queries, HTML escaping of displayed input, validation of supplier URL schemes, CSV formula protection, and static-file routing confined to the public directory. Those observations are not a guarantee against all vulnerabilities.
+## Request and data controls
 
-## Validation
+- HTTPS is provided by the hosting services.
+- API responses and browser assets use no-store caching and security headers.
+- The content security policy restricts scripts to this site and connections to the configured Supabase project.
+- Cross-site API requests are refused; changes require a same-origin request header and bounded object-shaped JSON.
+- Inventory input is validated on the server, displayed text is escaped, supplier URL schemes are restricted, and CSV cells have formula protections.
+- Version checks prevent concurrent writes from silently overwriting each other. Conflicts retry or return a controlled retry message.
+- Successful cloud writes record the authenticated actor in a private audit table.
+- No patient records are required. Use supply descriptions and aggregate daily patient totals only.
 
-- `npm test`: 19 checks passed, covering inventory behavior, persistence, request guards, input parsing, and file permissions.
-- `npm run security:check`: 18 HTTP checks passed against the restarted local server. Checks cover private-file requests, encoded path traversal, foreign origins and hosts, missing write protections, invalid and oversized bodies, malformed paths, unsupported methods, and required response headers.
-- Both clinic and sample inventory API snapshots were unchanged before and after the HTTP checks.
+Provider project owners retain infrastructure access independently of the website's staff roles. Do not share Supabase or Vercel administrator access with ordinary staff or portfolio reviewers.
 
-These are source review and targeted local tests, not a comprehensive penetration test or verification of a future hosting provider.
+## Local access
 
-## Agreed remote access model
+The local server listens on loopback and has no user authentication. Anyone able to use its operating-system account can access the local inventory. It refuses unexpected hosts and cross-site requests. The data directory and local database files use restrictive file permissions. Cloud deployment does not automatically migrate local records.
 
-The user selected access from anywhere using an approved list of staff email addresses.
+## Verification scope and operational limits
 
-1. Use a maintained authentication provider for email verification and session handling. Only invited or explicitly approved accounts may access clinic records; possession of the website URL grants no access.
-2. Enforce approval on the server or database for every inventory read, write, and export. A hidden page or client-side email check alone is insufficient.
-3. Keep management of approved accounts restricted to the clinic's designated administrator. Removing approval must block subsequent data requests, including requests from an existing session.
-4. Use HTTPS, protected server-side credentials, and persistent storage with tested backups. The current local SQLite files cannot simply be copied into an ephemeral hosting filesystem and relied on for persistence.
-5. Test signed-out requests, an authenticated but unapproved account, an approved staff account, and a removed staff account before staff begin remote use. Verify that export and direct API calls follow the same rules as the screen.
+Automated checks cover inventory arithmetic, local persistence, snapshot restoration, conflicting updates, rejected mutations, API request guards, JSON limits, and local file permissions. Live deployment checks cover authentication, staff authorization, revoked access, saved data, and provider access restrictions. These checks are targeted functional/security verification, not a comprehensive penetration test or a compliance certification.
 
-The existing activity log records actions, not the identity of a staff member. Recording the authenticated actor belongs in the remote version. No staff accounts or invitations have been created, and no inventory data has been uploaded.
+Keep dependencies updated and review provider access, usage limits, and audit records. The free provider configuration does not include compromised-password screening in this implementation. Use long, unique passwords. Automated full database backup/restore, MFA enrollment UI, and monitoring alerts are not implemented; the inventory CSV is not a full backup. Project owners should arrange database exports and test restoration before relying on the app as the sole record.
 
-References: [OWASP authorization guidance](https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html) and [OWASP authentication guidance](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html).
+References: [Supabase row-level security](https://supabase.com/docs/guides/database/postgres/row-level-security), [OWASP authorization](https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html), and [OWASP authentication](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html).
